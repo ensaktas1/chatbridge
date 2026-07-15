@@ -86,7 +86,7 @@ export default function Home() {
           <div className="form-foot">
             <span>Desteklenenler</span>
             <div>{providers.map((provider) => <b key={provider}>{provider}</b>)}</div>
-            <span className="privacy">İndekslenmez · 30 günde silinir</span>
+            <span className="privacy">İndekslenmez · 30 günde silinir · Claude: Jina Reader</span>
           </div>
           {error && <div className="notice error" role="alert">{error}</div>}
         </form>
