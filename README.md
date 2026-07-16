@@ -4,7 +4,20 @@ Carry the context. Switch the model.
 
 ChatBridge turns a public ChatGPT, Claude, or Gemini conversation into one clean URL that another AI can read. Generated pages are public to anyone who has the URL, are excluded from search indexing, and expire after 30 days.
 
+[**Try ChatBridge live →**](https://chatbridgeapp.vercel.app/)
+
+[Live app](https://chatbridgeapp.vercel.app/) · [How it works](#how-it-works) · [Privacy model](#privacy-model) · [Deploy your own](#deploy-your-own)
+
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fensaktas1%2Fchatbridge&env=DATABASE_URL,CRON_SECRET&envDescription=Neon%20Postgres%20connection%20string%20and%20a%20long%20random%20cron%20secret)
+
+## How it works
+
+1. Create a public share link in ChatGPT, Claude, or Gemini.
+2. Paste it into ChatBridge.
+3. ChatBridge converts the conversation into a clean, provider-neutral page.
+4. Paste the generated URL into another AI to continue with the same context.
+
+No account or ChatGPT sign-in is required.
 
 ## Features
 
@@ -15,6 +28,16 @@ ChatBridge turns a public ChatGPT, Claude, or Gemini conversation into one clean
 - Deletes expired rows daily with Vercel Cron
 - Requires no user account or sign-in
 - Uses BE UI-inspired motion, components, and visual tokens
+
+## Live deployment
+
+The official deployment is available at [chatbridgeapp.vercel.app](https://chatbridgeapp.vercel.app/).
+
+- Hosting: Vercel
+- Runtime: Next.js App Router
+- Database: Neon Postgres
+- Expiry cleanup: Vercel Cron
+- Retention: 30 days
 
 ## Local development
 
@@ -37,7 +60,7 @@ CRON_SECRET=replace-with-a-long-random-value
 
 The application creates its `conversations` table and expiry index on first use.
 
-## Deploy to Vercel
+## Deploy your own
 
 1. Push this repository to GitHub.
 2. Import `ensaktas1/chatbridge` in Vercel.
