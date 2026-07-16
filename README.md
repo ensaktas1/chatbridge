@@ -1,98 +1,86 @@
-# vinext-starter
+# ChatBridge
 
-A clean full-stack starter running on
-[vinext](https://github.com/cloudflare/vinext), with optional Cloudflare D1 and
-Drizzle support.
+Carry the context. Switch the model.
 
-## Prerequisites
+ChatBridge turns a public ChatGPT, Claude, or Gemini conversation into one clean URL that another AI can read. Generated pages are public to anyone who has the URL, are excluded from search indexing, and expire after 30 days.
 
-- Node.js `>=22.13.0`
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fensaktas1%2Fchatbridge&env=DATABASE_URL,CRON_SECRET&envDescription=Neon%20Postgres%20connection%20string%20and%20a%20long%20random%20cron%20secret)
 
-## Quick Start
+## Features
+
+- Imports public share links from ChatGPT, Claude, and Gemini
+- Creates a clean, provider-neutral conversation page
+- Exports every bridge as Markdown
+- Uses a browser-only deletion key so public viewers cannot delete a bridge
+- Deletes expired rows daily with Vercel Cron
+- Requires no user account or sign-in
+- Uses BE UI-inspired motion, components, and visual tokens
+
+## Local development
+
+Requirements: Node.js 22+, npm, and a Postgres database. Neon is the recommended serverless Postgres provider for Vercel.
 
 ```bash
+git clone https://github.com/ensaktas1/chatbridge.git
+cd chatbridge
 npm install
+cp .env.example .env.local
 npm run dev
-npm run build
 ```
 
-This starter does not use `wrangler.jsonc`.
+Set these values in `.env.local`:
 
-## Included Shape
-
-- edit site code under `app/`
-- `.openai/hosting.json` declares optional Sites D1 and R2 bindings
-- `vite.config.ts` simulates declared bindings for local development
-- `db/schema.ts` starts intentionally empty
-- `examples/d1/` contains an optional D1 example surface
-- `drizzle.config.ts` supports local migration generation when needed
-
-## Workspace Auth Headers
-
-OpenAI workspace sites can read the current user's email from
-`oai-authenticated-user-email`.
-
-SIWC-authenticated workspace sites may also receive
-`oai-authenticated-user-full-name` when the user's SIWC profile has a non-empty
-`name` claim. The full-name value is percent-encoded UTF-8 and is accompanied by
-`oai-authenticated-user-full-name-encoding: percent-encoded-utf-8`.
-
-Treat the full name as optional and fall back to email when it is absent:
-
-```tsx
-import { headers } from "next/headers";
-
-export default async function Home() {
-  const requestHeaders = await headers();
-  const email = requestHeaders.get("oai-authenticated-user-email");
-  const encodedFullName = requestHeaders.get("oai-authenticated-user-full-name");
-  const fullName =
-    encodedFullName &&
-    requestHeaders.get("oai-authenticated-user-full-name-encoding") ===
-      "percent-encoded-utf-8"
-      ? decodeURIComponent(encodedFullName)
-      : null;
-
-  const displayName = fullName ?? email;
-  // ...
-}
+```dotenv
+DATABASE_URL=postgresql://user:password@host/database?sslmode=require
+CRON_SECRET=replace-with-a-long-random-value
 ```
 
-## Optional Dispatch-Owned ChatGPT Sign-In
+The application creates its `conversations` table and expiry index on first use.
 
-Import the ready-to-use helpers from `app/chatgpt-auth.ts` when the site needs
-optional or required ChatGPT sign-in:
+## Deploy to Vercel
 
-- Use `getChatGPTUser()` for optional signed-in UI.
-- Use `requireChatGPTUser(returnTo)` for server-rendered pages that should send
-  anonymous visitors through Sign in with ChatGPT.
-- Use `chatGPTSignInPath(returnTo)` and `chatGPTSignOutPath(returnTo)` for
-  browser links or actions.
-- Pass a same-origin relative `returnTo` path for the destination after sign-in
-  or sign-out. The helper validates and safely encodes it.
-- Mark protected pages with `export const dynamic = "force-dynamic"` because
-  they depend on per-request identity headers.
+1. Push this repository to GitHub.
+2. Import `ensaktas1/chatbridge` in Vercel.
+3. In the Vercel Marketplace, add a Neon Postgres integration to the project. Vercel will inject `DATABASE_URL`.
+4. Add a long random `CRON_SECRET` in Project Settings → Environment Variables.
+5. Deploy. The `vercel.json` schedule calls `/api/cron/cleanup` once per day.
 
-Dispatch owns `/signin-with-chatgpt`, `/signout-with-chatgpt`, `/callback`, the
-OAuth cookies, and identity header injection. Do not implement app routes for
-those reserved paths. Routes that do not import and call the helper remain
-anonymous-compatible.
+The project uses standard Next.js scripts, so Vercel needs no custom build command.
 
-SIWC establishes identity only; it does not prove workspace membership. Use the
-Sites hosting platform's access policy controls for workspace-wide restrictions,
-or enforce explicit server-side membership or allowlist checks.
+## Privacy model
 
-Use SIWC for account pages, user-specific dashboards, saved records, and write
-actions tied to the current ChatGPT user. Leave public content anonymous.
+ChatBridge must fetch, parse, and store the public conversation to create the requested page. It does not include accounts, profiling, advertising, content analytics, or model training. Conversation rows are stored in your configured Postgres database and can be deleted immediately from the browser that created them. A daily job removes rows after 30 days.
 
-## Useful Commands
+Important limitations:
 
-- `npm run dev`: start local development
-- `npm run build`: verify the vinext build output
-- `npm test`: build the starter and verify its rendered loading skeleton
-- `npm run db:generate`: generate Drizzle migrations after schema changes
+- Anyone with a generated ChatBridge URL can read that conversation.
+- The deletion token is stored only in the creator's browser and is never included in the public URL.
+- Claude imports use [Jina Reader](https://jina.ai/reader/) as a transport proxy because Claude blocks direct server-to-server snapshot requests.
+- Your deployment host, database provider, original AI provider, and any transport proxy process data under their own terms.
+- Do not import secrets or material you do not have permission to share.
 
-## Learn More
+## Architecture
 
-- [vinext Documentation](https://github.com/cloudflare/vinext)
-- [Drizzle D1 Guide](https://orm.drizzle.team/docs/get-started/d1-new)
+- Next.js App Router and React
+- [Motion](https://motion.dev/) for BE UI-style spring interactions
+- [Neon serverless driver](https://neon.com/docs/serverless/serverless-driver) for Postgres over HTTP
+- Vercel Cron for expiry cleanup
+
+The UI takes its visual language and component behavior from [BE UI](https://beui.dev/), whose open-source project is MIT licensed. ChatBridge keeps the adapted components in this repository so they are easy to inspect and change.
+
+## Commands
+
+```bash
+npm run dev     # local development
+npm run build   # production build
+npm run lint    # ESLint
+npm test        # source-level behavior checks
+```
+
+## Contributing
+
+Issues and pull requests are welcome. Please run `npm run lint`, `npm test`, and `npm run build` before opening a pull request.
+
+## License
+
+[MIT](LICENSE)
