@@ -1,47 +1,40 @@
 # ChatBridge
 
-Carry the context. Switch the model.
+**Carry the context. Switch the model.**
 
-ChatBridge turns a public ChatGPT, Claude, or Gemini conversation into one clean URL that another AI can read. Generated pages are public to anyone who has the URL, are excluded from search indexing, and expire after 30 days.
+ChatBridge converts public ChatGPT, Claude, and Gemini conversation URLs into clean, portable pages that other AI tools can read.
 
-[**Try ChatBridge live →**](https://chatbridgeapp.vercel.app/)
-
-[Live app](https://chatbridgeapp.vercel.app/) · [How it works](#how-it-works) · [Privacy model](#privacy-model) · [Deploy your own](#deploy-your-own)
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fensaktas1%2Fchatbridge&env=DATABASE_URL,CRON_SECRET&envDescription=Neon%20Postgres%20connection%20string%20and%20a%20long%20random%20cron%20secret)
+### [Try ChatBridge →](https://chatbridgeapp.vercel.app/)
 
 ## How it works
 
-1. Create a public share link in ChatGPT, Claude, or Gemini.
-2. Paste it into ChatBridge.
-3. ChatBridge converts the conversation into a clean, provider-neutral page.
-4. Paste the generated URL into another AI to continue with the same context.
-
-No account or ChatGPT sign-in is required.
+1. Paste a public ChatGPT, Claude, or Gemini conversation URL.
+2. ChatBridge reads the shared conversation and creates a portable page.
+3. Copy the new URL into another AI tool to continue with the same context.
 
 ## Features
 
-- Imports public share links from ChatGPT, Claude, and Gemini
-- Creates a clean, provider-neutral conversation page
-- Exports every bridge as Markdown
-- Uses a browser-only deletion key so public viewers cannot delete a bridge
-- Deletes expired rows daily with Vercel Cron
-- Requires no user account or sign-in
-- Uses BE UI-inspired motion, components, and visual tokens
+- Supports public ChatGPT, Claude, and Gemini share URLs
+- Preserves the conversation in a clean, provider-neutral format
+- Produces a public URL that AI tools and browsers can read
+- Exports conversations as Markdown
+- Lets the creator delete a generated page from the same browser
+- Automatically removes conversations after 30 days
+- Keeps conversation pages out of search engine indexes
 
-## Live deployment
+## Privacy
 
-The official deployment is available at [chatbridgeapp.vercel.app](https://chatbridgeapp.vercel.app/).
+ChatBridge processes a public conversation only to create the requested page. It does not use conversation content for profiling, advertising, analytics, or model training.
 
-- Hosting: Vercel
-- Runtime: Next.js App Router
-- Database: Neon Postgres
-- Expiry cleanup: Vercel Cron
-- Retention: 30 days
+- Generated pages are public to anyone with the URL.
+- A deletion key is stored only in the browser that created the page.
+- Conversations are deleted automatically after 30 days.
+- Claude imports currently use [Jina Reader](https://jina.ai/reader/) as a transport proxy.
+- Do not submit secrets or conversations you are not allowed to share.
 
-## Local development
+## Run locally
 
-Requirements: Node.js 22+, npm, and a Postgres database. Neon is the recommended serverless Postgres provider for Vercel.
+You need Node.js 22+, npm, and a PostgreSQL database.
 
 ```bash
 git clone https://github.com/ensaktas1/chatbridge.git
@@ -51,58 +44,45 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Set these values in `.env.local`:
+Add the following values to `.env.local`:
 
 ```dotenv
 DATABASE_URL=postgresql://user:password@host/database?sslmode=require
 CRON_SECRET=replace-with-a-long-random-value
 ```
 
-The application creates its `conversations` table and expiry index on first use.
+ChatBridge creates the required database table and expiry index automatically.
 
-## Deploy your own
+## Deploy to Vercel
 
-1. Push this repository to GitHub.
-2. Import `ensaktas1/chatbridge` in Vercel.
-3. In the Vercel Marketplace, add a Neon Postgres integration to the project. Vercel will inject `DATABASE_URL`.
-4. Add a long random `CRON_SECRET` in Project Settings → Environment Variables.
-5. Deploy. The `vercel.json` schedule calls `/api/cron/cleanup` once per day.
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fensaktas1%2Fchatbridge&env=DATABASE_URL,CRON_SECRET&envDescription=Postgres%20connection%20string%20and%20a%20long%20random%20cron%20secret)
 
-The project uses standard Next.js scripts, so Vercel needs no custom build command.
+1. Import the repository into Vercel.
+2. Connect a Neon Postgres database from the Vercel Marketplace.
+3. Confirm that the integration added `DATABASE_URL` to the project.
+4. Add a long random `CRON_SECRET` environment variable.
+5. Deploy or redeploy the project.
 
-## Privacy model
+The included `vercel.json` runs the expiry cleanup once per day.
 
-ChatBridge must fetch, parse, and store the public conversation to create the requested page. It does not include accounts, profiling, advertising, content analytics, or model training. Conversation rows are stored in your configured Postgres database and can be deleted immediately from the browser that created them. A daily job removes rows after 30 days.
+## Stack
 
-Important limitations:
+- Next.js App Router
+- React
+- [Motion](https://motion.dev/)
+- [Neon serverless Postgres](https://neon.com/docs/serverless/serverless-driver)
+- Vercel Cron
 
-- Anyone with a generated ChatBridge URL can read that conversation.
-- The deletion token is stored only in the creator's browser and is never included in the public URL.
-- Claude imports use [Jina Reader](https://jina.ai/reader/) as a transport proxy because Claude blocks direct server-to-server snapshot requests.
-- Your deployment host, database provider, original AI provider, and any transport proxy process data under their own terms.
-- Do not import secrets or material you do not have permission to share.
+The interface is inspired by the open-source component and motion language of [BE UI](https://beui.dev/).
 
-## Architecture
-
-- Next.js App Router and React
-- [Motion](https://motion.dev/) for BE UI-style spring interactions
-- [Neon serverless driver](https://neon.com/docs/serverless/serverless-driver) for Postgres over HTTP
-- Vercel Cron for expiry cleanup
-
-The UI takes its visual language and component behavior from [BE UI](https://beui.dev/), whose open-source project is MIT licensed. ChatBridge keeps the adapted components in this repository so they are easy to inspect and change.
-
-## Commands
+## Scripts
 
 ```bash
-npm run dev     # local development
-npm run build   # production build
-npm run lint    # ESLint
-npm test        # source-level behavior checks
+npm run dev
+npm run build
+npm run lint
+npm test
 ```
-
-## Contributing
-
-Issues and pull requests are welcome. Please run `npm run lint`, `npm test`, and `npm run build` before opening a pull request.
 
 ## License
 
