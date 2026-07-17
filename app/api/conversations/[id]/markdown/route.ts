@@ -7,5 +7,6 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   return new Response(toMarkdown(conversation), { headers: {
     "content-type": "text/markdown; charset=utf-8",
     "content-disposition": `attachment; filename="chatbridge-${id}.md"`,
+    "x-robots-tag": "noindex, nofollow, noarchive, nosnippet, noimageindex",
   }});
 }
